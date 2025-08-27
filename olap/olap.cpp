@@ -6,6 +6,7 @@
 #include <map>
 #include <set>
 #include <limits>
+#include <iomanip>
 
 using namespace std;
 
@@ -14,18 +15,41 @@ struct Measures {
     int ise = 0, mse = 0, ese = 0, total = 0;
 };
 
-// Global variables to define the dimensions of our cube
+// --- Data Structure representing the 3D Cube ---
+// A nested map to represent Year -> Semester -> Subject -> Measures
+map<string, map<string, map<string, Measures>>> dataCube;
+
+// Global variables to hold the distinct dimension values
 set<string> years;
 set<string> semesters;
 set<string> subjects;
 
-// The Data Cube
-map<string, Measures> dataCube;
 
-// Function to create a unique key for the map
-string getKey(const string& year, const string& semester, const string& subject) {
-    return year + "|" + semester + "|" + subject;
+// --- Helper function to print a "slice" of the cube ---
+void printCubeSlice(const map<string, map<string, Measures>>& slice, const string& sliceName) {
+    cout << "\n--- Cube Slice for Year: " << sliceName << " ---\n";
+
+    // Print header
+    cout << left << setw(12) << "Semester";
+    for (const auto& subject : subjects) {
+        cout << setw(10) << subject;
+    }
+    cout << "\n" << string(12 + subjects.size() * 10, '-') << "\n";
+
+    // Print data rows
+    for (const auto& sem : semesters) {
+        cout << left << setw(12) << sem;
+        for (const auto& sub : subjects) {
+            if (slice.count(sem) && slice.at(sem).count(sub)) {
+                cout << setw(10) << slice.at(sem).at(sub).total;
+            } else {
+                cout << setw(10) << "N/A";
+            }
+        }
+        cout << "\n";
+    }
 }
+
 
 // Function to load data from CSV and build the data cube
 bool buildDataCube(const string& filename) {
@@ -51,79 +75,84 @@ bool buildDataCube(const string& filename) {
         getline(ss, item, ','); ese = stoi(item);
         getline(ss, item, ','); total = stoi(item);
 
+        // Populate dimension sets
         years.insert(year);
         semesters.insert(semester);
         subjects.insert(subject);
 
-        string key = getKey(year, semester, subject);
-        dataCube[key] = {ise, mse, ese, total};
+        // Insert data into the nested map structure
+        dataCube[year][semester][subject] = {ise, mse, ese, total};
     }
 
     file.close();
     return true;
 }
 
-// OLAP Operation: Roll-Up
+// --- OLAP Operations with 3D-like Representation ---
+
+// OLAP Operation: Roll-Up (from Semesters and Subjects to Year)
 void rollUp() {
-    cout << "\n--- Roll-Up: Total Marks by Year ---\n";
+    cout << "\n--- Roll-Up: Total Marks by Year (Aggregating Semesters & Subjects) ---\n";
     map<string, int> yearTotals;
-    for (const auto& pair : dataCube) {
-        string year = pair.first.substr(0, pair.first.find('|'));
-        yearTotals[year] += pair.second.total;
+    for (const auto& year_pair : dataCube) {
+        int currentYearTotal = 0;
+        for (const auto& sem_pair : year_pair.second) {
+            for (const auto& sub_pair : sem_pair.second) {
+                currentYearTotal += sub_pair.second.total;
+            }
+        }
+        yearTotals[year_pair.first] = currentYearTotal;
     }
+
+    cout << "\nYear       | Total Marks\n";
+    cout << "-----------|-------------\n";
     for (const auto& pair : yearTotals) {
-        cout << "Year: " << pair.first << " -> Total Marks: " << pair.second << "\n";
+        cout << left << setw(11) << pair.first << "| " << pair.second << "\n";
     }
 }
 
-// OLAP Operation: Drill-Down
+// OLAP Operation: Drill-Down (from Year to Semesters and Subjects)
 void drillDown(const string& year) {
-    cout << "\n--- Drill-Down: Subjects in Year '" << year << "' ---\n";
-    cout << "Subject\t\tSemester\tYear\tISE\tMSE\tESE\tTotal\n";
-    for (const auto& s : subjects) {
-        for (const auto& sem : semesters) {
-            string key = getKey(year, sem, s);
-            if (dataCube.count(key)) {
-                Measures m = dataCube[key];
-                cout << s << "\t\t" << sem << "\t\t" << year << "\t"
-                     << m.ise << "\t" << m.mse << "\t" << m.ese << "\t" << m.total << "\n";
-            }
-        }
+    cout << "\n--- Drill-Down: Viewing details for Year '" << year << "' ---\n";
+    if (dataCube.count(year)) {
+        printCubeSlice(dataCube[year], year);
+    } else {
+        cout << "No data found for year: " << year << "\n";
     }
 }
 
-// OLAP Operation: Slice
+// OLAP Operation: Slice (by a specific subject)
 void slice(const string& subject) {
-    cout << "\n--- Slice: Records for Subject '" << subject << "' ---\n";
-    cout << "Subject\t\tSemester\tYear\tISE\tMSE\tESE\tTotal\n";
-    for (const auto& y : years) {
+    cout << "\n--- Slice: Data for Subject '" << subject << "' ---\n";
+    cout << left << setw(12) << "Year" << setw(12) << "Semester" << "Total Marks\n";
+    cout << string(36, '-') << "\n";
+
+    for (const auto& year : years) {
         for (const auto& sem : semesters) {
-            string key = getKey(y, sem, subject);
-            if (dataCube.count(key)) {
-                Measures m = dataCube[key];
-                cout << subject << "\t\t" << sem << "\t\t" << y << "\t"
-                     << m.ise << "\t" << m.mse << "\t" << m.ese << "\t" << m.total << "\n";
+            if (dataCube.count(year) && dataCube[year].count(sem) && dataCube[year][sem].count(subject)) {
+                cout << left << setw(12) << year << setw(12) << sem
+                     << dataCube[year][sem][subject].total << "\n";
             }
         }
     }
 }
 
-// OLAP Operation: Dice
+// OLAP Operation: Dice (by year and semester)
 void dice(const string& year, const string& semester) {
     cout << "\n--- Dice: Records for Year '" << year << "' AND Semester '" << semester << "' ---\n";
-    cout << "Subject\t\tSemester\tYear\tISE\tMSE\tESE\tTotal\n";
-    for (const auto& s : subjects) {
-        string key = getKey(year, semester, s);
-        if (dataCube.count(key)) {
-            Measures m = dataCube[key];
-            cout << s << "\t\t" << semester << "\t\t" << year << "\t"
-                 << m.ise << "\t" << m.mse << "\t" << m.ese << "\t" << m.total << "\n";
+    if (dataCube.count(year) && dataCube[year].count(semester)) {
+        cout << left << setw(12) << "Subject" << "Total Marks\n";
+        cout << string(24, '-') << "\n";
+        for (const auto& sub_pair : dataCube[year][semester]) {
+            cout << left << setw(12) << sub_pair.first << sub_pair.second.total << "\n";
         }
+    } else {
+        cout << "No data found for the specified year and semester.\n";
     }
 }
 
 void showMenu() {
-    cout << "\n---------- OLAP Operations Menu ----------\n";
+    cout << "\n---------- 3D OLAP Operations Menu ----------\n";
     cout << "1. Roll-Up (Aggregate total marks by year)\n";
     cout << "2. Drill-Down (Show details for a specific year)\n";
     cout << "3. Slice (Filter by a single subject)\n";
@@ -134,6 +163,7 @@ void showMenu() {
 }
 
 int main() {
+
     if (!buildDataCube("student_marks.csv")) {
         return 1;
     }
@@ -146,27 +176,33 @@ int main() {
         showMenu();
         cin >> choice;
 
-        // Clear the input buffer
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        if(cin.fail()) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid input. Please enter a number.\n";
+            continue;
+        }
+
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear the rest of the line
 
         switch (choice) {
             case 1:
                 rollUp();
                 break;
             case 2:
-                cout << "Enter Year to drill down into (e.g., First, Second): ";
+                cout << "Enter Year to drill down into (First, Second): ";
                 getline(cin, year);
                 drillDown(year);
                 break;
             case 3:
-                cout << "Enter Subject to slice by (e.g., Maths, Phys, Chem): ";
+                cout << "Enter Subject to slice by (Maths, Phys, Chem): ";
                 getline(cin, subject);
                 slice(subject);
                 break;
             case 4:
-                cout << "Enter Year (e.g., First, Second): ";
+                cout << "Enter Year (First, Second): ";
                 getline(cin, year);
-                cout << "Enter Semester (e.g., I, II, III, IV): ";
+                cout << "Enter Semester (I, II, III, IV): ";
                 getline(cin, semester);
                 dice(year, semester);
                 break;
