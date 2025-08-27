@@ -7,7 +7,46 @@
 
 using namespace std;
 
-// Function to perform Min-Max Normalization
+
+void decimal_scaling(){
+    ifstream inFile("input_decimal.csv");
+    if (!inFile) {
+        cerr << "Error: Could not open input_decimal.csv" << endl;
+        return;
+    }
+    vector<double> data;
+    double value;
+    while (inFile >> value) {
+        data.push_back(value);
+    }
+    inFile.close();
+
+    double max_abs = 0.0;
+    for (double val : data) {
+        if (fabs(val) > max_abs) {
+            max_abs = fabs(val);
+        }
+    }
+    int j = 0;
+    while (max_abs >= 1) {
+        max_abs /= 10;
+        j++;
+    }
+    ofstream outFile("output_decimal_scaling.csv");
+    if (!outFile) {
+        cerr << "Error: Could not create output_decimal_scaling.csv" << endl;
+        return;
+    }
+    outFile << "Original_Data,Normalized_Data" << endl;
+    for (double val : data) {
+        double normalized_val = val / pow(10, j);
+        outFile << val << "," << normalized_val << endl;
+    }
+    outFile.close();
+    cout << "Decimal Scaling Normalization complete. Check 'output_decimal_scaling.csv'." << endl;
+
+
+}
 void minmax() {
     ifstream inFile("input_minmax.csv");
     if (!inFile) {
@@ -52,7 +91,6 @@ void minmax() {
     cout << "Min-Max Normalization complete. Check 'output_minmax.csv'." << endl;
 }
 
-// Function to perform Z-Score Normalization
 void zscore() {
     ifstream inFile("input_zscore.csv");
     if (!inFile) {
@@ -102,7 +140,8 @@ int main() {
     cout << "Select a normalization technique:" << endl;
     cout << "1. Min-Max Normalization" << endl;
     cout << "2. Z-Score Normalization" << endl;
-    cout << "Enter your choice (1 or 2): ";
+    cout << "3. Decimal Scaling Normalization" << endl;
+    cout << "Enter your choice (1, 2 or 3): ";
     cin >> option;
 
     switch (option) {
@@ -111,6 +150,9 @@ int main() {
             break;
         case 2:
             zscore();
+            break;
+        case 3:
+            decimal_scaling();
             break;
         default:
             cout << "Invalid option. Please run the program again and select 1 or 2." << endl;

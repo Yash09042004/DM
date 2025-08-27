@@ -1,7 +1,6 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-// Function to calculate the median of a vector of integers
 double calculateMedian(const vector<int> &data)
 {
     int n = data.size();
@@ -9,19 +8,16 @@ double calculateMedian(const vector<int> &data)
     {
         return 0.0;
     }
-    // If the size is odd, the median is the middle element
     if (n % 2 != 0)
     {
         return data[n / 2];
     }
-    // If the size is even, the median is the average of the two middle elements
     else
     {
         return (data[n / 2 - 1] + data[n / 2]) / 2.0;
     }
 }
 
-// Function to calculate the first quartile (Q1)
 double calculateQ1(const vector<int> &data)
 {
     int n = data.size();
@@ -29,13 +25,11 @@ double calculateQ1(const vector<int> &data)
     {
         return 0.0;
     }
-    // Create a sub-vector for the lower half of the data
     vector<int> lowerHalf;
     lowerHalf.assign(data.begin(), data.begin() + n / 2);
     return calculateMedian(lowerHalf);
 }
 
-// Function to calculate the third quartile (Q3)
 double calculateQ3(const vector<int> &data)
 {
     int n = data.size();
@@ -43,7 +37,6 @@ double calculateQ3(const vector<int> &data)
     {
         return 0.0;
     }
-    // Create a sub-vector for the upper half of the data
     vector<int> upperHalf;
     if (n % 2 == 0)
     {
@@ -51,7 +44,6 @@ double calculateQ3(const vector<int> &data)
     }
     else
     {
-        // Exclude the median for odd-sized datasets
         upperHalf.assign(data.begin() + n / 2 + 1, data.end());
     }
     return calculateMedian(upperHalf);
@@ -59,18 +51,15 @@ double calculateQ3(const vector<int> &data)
 
 int main()
 {
-    // Input file name
     string inputFileName = "data.txt";
     ifstream inputFile(inputFileName);
 
-    // Check if the input file can be opened
     if (!inputFile.is_open())
     {
         cerr << "Error: Unable to open input file '" << inputFileName << "'" << endl;
         return 1;
     }
 
-    // Read data from the file
     vector<int> data;
     int value;
     while (inputFile >> value)
@@ -79,10 +68,8 @@ int main()
     }
     inputFile.close();
 
-    // Sort the data to correctly calculate statistics
     sort(data.begin(), data.end());
 
-    // Calculate the five-number summary
     int minVal = data.front();
     int maxVal = data.back();
     double medianVal = calculateMedian(data);
@@ -96,7 +83,6 @@ int main()
     whiskerLower = max(whiskerLower, static_cast<double>(minVal));
     whiskerUpper = min(whiskerUpper, static_cast<double>(maxVal));
 
-    // Output to console
     cout << "--- Five-Number Summary ---" << endl;
     cout << "Minimum Value: " << minVal << endl;
     cout << "First Quartile (Q1): " << q1Val << endl;

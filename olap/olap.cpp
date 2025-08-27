@@ -159,7 +159,7 @@ int main() {
                 drillDown(year);
                 break;
             case 3:
-                cout << "Enter Subject to slice by (e.g., Maths, Science, History): ";
+                cout << "Enter Subject to slice by (e.g., Maths, Phys, Chem): ";
                 getline(cin, subject);
                 slice(subject);
                 break;
