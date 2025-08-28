@@ -1,25 +1,24 @@
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <cmath>
-#include <algorithm>
-#include <limits>
-
+#include <bits/stdc++.h>
 using namespace std;
 
-
-void decimal_scaling(){
-    ifstream inFile("input_decimal.csv");
+void decimal_scaling(const string &inputFileName) {
+    ifstream inFile(inputFileName);
     if (!inFile) {
-        cerr << "Error: Could not open input_decimal.csv" << endl;
+        cerr << "Error: Could not open " << inputFileName << endl;
         return;
     }
+
     vector<double> data;
     double value;
     while (inFile >> value) {
         data.push_back(value);
     }
     inFile.close();
+
+    if (data.empty()) {
+        cerr << "Error: Input file is empty." << endl;
+        return;
+    }
 
     double max_abs = 0.0;
     for (double val : data) {
@@ -32,25 +31,27 @@ void decimal_scaling(){
         max_abs /= 10;
         j++;
     }
+
     ofstream outFile("output_decimal_scaling.csv");
     if (!outFile) {
         cerr << "Error: Could not create output_decimal_scaling.csv" << endl;
         return;
     }
+
     outFile << "Original_Data,Normalized_Data" << endl;
     for (double val : data) {
         double normalized_val = val / pow(10, j);
         outFile << val << "," << normalized_val << endl;
     }
     outFile.close();
+
     cout << "Decimal Scaling Normalization complete. Check 'output_decimal_scaling.csv'." << endl;
-
-
 }
-void minmax() {
-    ifstream inFile("input_minmax.csv");
+
+void minmax(const string &inputFileName) {
+    ifstream inFile(inputFileName);
     if (!inFile) {
-        cerr << "Error: Could not open input_minmax.csv" << endl;
+        cerr << "Error: Could not open " << inputFileName << endl;
         return;
     }
 
@@ -86,15 +87,15 @@ void minmax() {
         double normalized_val = (((val - min_val) / (max_val - min_val)) * (new_max - new_min)) + new_min;
         outFile << val << "," << normalized_val << endl;
     }
-
     outFile.close();
+
     cout << "Min-Max Normalization complete. Check 'output_minmax.csv'." << endl;
 }
 
-void zscore() {
-    ifstream inFile("input_zscore.csv");
+void zscore(const string &inputFileName) {
+    ifstream inFile(inputFileName);
     if (!inFile) {
-        cerr << "Error: Could not open input_zscore.csv" << endl;
+        cerr << "Error: Could not open " << inputFileName << endl;
         return;
     }
 
@@ -130,32 +131,38 @@ void zscore() {
         double normalized_val = (val - mean) / std_dev;
         outFile << val << "," << normalized_val << endl;
     }
-
     outFile.close();
-    cout << "Z-Score Normalization complete. Check 'output_Zscore.csv'." << endl;
+
+    cout << "Z-Score Normalization complete. Check 'output_zscore.csv'." << endl;
 }
 
 int main() {
     int option;
+    string inputFileName;
+
     cout << "Select a normalization technique:" << endl;
     cout << "1. Min-Max Normalization" << endl;
     cout << "2. Z-Score Normalization" << endl;
     cout << "3. Decimal Scaling Normalization" << endl;
     cout << "Enter your choice (1, 2 or 3): ";
     cin >> option;
+    cin.ignore(); // clear newline left by cin
+
+    cout << "Enter input filename: ";
+    getline(cin, inputFileName);
 
     switch (option) {
         case 1:
-            minmax();
+            minmax(inputFileName);
             break;
         case 2:
-            zscore();
+            zscore(inputFileName);
             break;
         case 3:
-            decimal_scaling();
+            decimal_scaling(inputFileName);
             break;
         default:
-            cout << "Invalid option. Please run the program again and select 1 or 2." << endl;
+            cout << "Invalid option. Please run the program again and select 1, 2, or 3." << endl;
             break;
     }
 

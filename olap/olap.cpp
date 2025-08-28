@@ -151,23 +151,115 @@ void dice(const string& year, const string& semester) {
     }
 }
 
+// OLAP Operation: Cube (Full Aggregation across all dimensions)
+void cubeOperation() {
+    cout << "\n--- Cube Operation (Aggregation across all dimensions) ---\n";
+
+    // (Year, Semester, Subject)
+    cout << "\n[Year, Semester, Subject] Aggregation:\n";
+    for (const auto& year : years) {
+        for (const auto& sem : semesters) {
+            for (const auto& sub : subjects) {
+                if (dataCube.count(year) && dataCube[year].count(sem) && dataCube[year][sem].count(sub)) {
+                    cout << "Year=" << year << ", Semester=" << sem << ", Subject=" << sub
+                         << " -> Total=" << dataCube[year][sem][sub].total << "\n";
+                }
+            }
+        }
+    }
+
+    // (Year, Semester)
+    cout << "\n[Year, Semester] Aggregation:\n";
+    for (const auto& year : years) {
+        for (const auto& sem : semesters) {
+            int sum = 0;
+            if (dataCube.count(year) && dataCube[year].count(sem)) {
+                for (const auto& sub : dataCube[year][sem]) {
+                    sum += sub.second.total;
+                }
+                cout << "Year=" << year << ", Semester=" << sem << " -> Total=" << sum << "\n";
+            }
+        }
+    }
+
+    // (Year)
+    cout << "\n[Year] Aggregation:\n";
+    for (const auto& year : years) {
+        int sum = 0;
+        if (dataCube.count(year)) {
+            for (const auto& sem : dataCube[year]) {
+                for (const auto& sub : sem.second) {
+                    sum += sub.second.total;
+                }
+            }
+            cout << "Year=" << year << " -> Total=" << sum << "\n";
+        }
+    }
+
+    // (Semester)
+    cout << "\n[Semester] Aggregation:\n";
+    for (const auto& sem : semesters) {
+        int sum = 0;
+        for (const auto& year : years) {
+            if (dataCube.count(year) && dataCube[year].count(sem)) {
+                for (const auto& sub : dataCube[year][sem]) {
+                    sum += sub.second.total;
+                }
+            }
+        }
+        cout << "Semester=" << sem << " -> Total=" << sum << "\n";
+    }
+
+    // (Subject)
+    cout << "\n[Subject] Aggregation:\n";
+    for (const auto& sub : subjects) {
+        int sum = 0;
+        for (const auto& year : years) {
+            for (const auto& sem : semesters) {
+                if (dataCube.count(year) && dataCube[year].count(sem) && dataCube[year][sem].count(sub)) {
+                    sum += dataCube[year][sem][sub].total;
+                }
+            }
+        }
+        cout << "Subject=" << sub << " -> Total=" << sum << "\n";
+    }
+
+    // Grand Total
+    int grandTotal = 0;
+    for (const auto& year : years) {
+        for (const auto& sem : semesters) {
+            for (const auto& sub : subjects) {
+                if (dataCube.count(year) && dataCube[year].count(sem) && dataCube[year][sem].count(sub)) {
+                    grandTotal += dataCube[year][sem][sub].total;
+                }
+            }
+        }
+    }
+    cout << "\n[Grand Total] Aggregation:\nTotal Marks = " << grandTotal << "\n";
+}
+
+
 void showMenu() {
     cout << "\n---------- 3D OLAP Operations Menu ----------\n";
     cout << "1. Roll-Up (Aggregate total marks by year)\n";
     cout << "2. Drill-Down (Show details for a specific year)\n";
     cout << "3. Slice (Filter by a single subject)\n";
     cout << "4. Dice (Filter by year and semester)\n";
-    cout << "5. Exit\n";
+    cout << "5. Cube (Full Aggregation)\n";
+    cout << "6. Exit\n";
     cout << "------------------------------------------\n";
     cout << "Enter your choice: ";
 }
 
 int main() {
+    string filename;
+    cout << "Enter CSV filename: ";
+    getline(cin, filename);
 
-    if (!buildDataCube("student_marks.csv")) {
+    if (!buildDataCube(filename)) {
         return 1;
     }
-    cout << "Data Cube built successfully from 'student_marks.csv'.\n";
+    cout << "Data Cube built successfully from '" << filename << "'.\n";
 
     int choice;
     string year, semester, subject;
@@ -190,23 +282,26 @@ int main() {
                 rollUp();
                 break;
             case 2:
-                cout << "Enter Year to drill down into (First, Second): ";
+                cout << "Enter Year to drill down into (e.g., First, Second): ";
                 getline(cin, year);
                 drillDown(year);
                 break;
             case 3:
-                cout << "Enter Subject to slice by (Maths, Phys, Chem): ";
+                cout << "Enter Subject to slice by (e.g., Maths, Phys, Chem): ";
                 getline(cin, subject);
                 slice(subject);
                 break;
             case 4:
-                cout << "Enter Year (First, Second): ";
+                cout << "Enter Year (e.g., First, Second): ";
                 getline(cin, year);
-                cout << "Enter Semester (I, II, III, IV): ";
+                cout << "Enter Semester (e.g., I, II, III, IV): ";
                 getline(cin, semester);
                 dice(year, semester);
                 break;
             case 5:
+                cubeOperation();
+                break;
+            case 6:
                 cout << "Exiting program.\n";
                 return 0;
             default:

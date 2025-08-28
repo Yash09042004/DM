@@ -51,9 +51,11 @@ double calculateQ3(const vector<int> &data)
 
 int main()
 {
-    string inputFileName = "data.txt";
-    ifstream inputFile(inputFileName);
+    string inputFileName;
+    cout << "Enter input filename: ";
+    getline(cin, inputFileName);  
 
+    ifstream inputFile(inputFileName);
     if (!inputFile.is_open())
     {
         cerr << "Error: Unable to open input file '" << inputFileName << "'" << endl;
@@ -67,6 +69,12 @@ int main()
         data.push_back(value);
     }
     inputFile.close();
+
+    if (data.empty())
+    {
+        cerr << "Error: No data found in file." << endl;
+        return 1;
+    }
 
     sort(data.begin(), data.end());
 
