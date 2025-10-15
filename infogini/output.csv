@@ -1,0 +1,16 @@
+Total Records,14
+Main Entropy,0.940286
+
+Information Gain Results
+Outlook,EntropyAfterSplit,0.578562,Gain,0.361724
+Temp,EntropyAfterSplit,0.911063,Gain,0.0292226
+Humidity,EntropyAfterSplit,0.78845,Gain,0.151836
+Wind,EntropyAfterSplit,0.892159,Gain,0.048127
+Selected_By_InformationGain,Outlook,MinGain,0.361724
+
+Gini Index Results
+Outlook,GiniIndex,0.278571
+Temp,GiniIndex,0.440476
+Humidity,GiniIndex,0.367347
+Wind,GiniIndex,0.428571
+Selected_By_Gini_Max,Outlook,MaxGini,0.278571
