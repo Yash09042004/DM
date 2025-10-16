@@ -1,0 +1,41 @@
+Total transactions: 6
+
+--- Frequent 1-itemsets ---
+{A} - Support: 66.6667%
+{B} - Support: 83.3333%
+{C} - Support: 50%
+{E} - Support: 50%
+{F} - Support: 33.3333%
+
+--- Frequent 2-itemsets ---
+{A, B} - Support: 50%
+{A, C} - Support: 50%
+{B, C} - Support: 33.3333%
+{B, E} - Support: 50%
+{B, F} - Support: 33.3333%
+{E, F} - Support: 33.3333%
+
+--- Frequent 3-itemsets ---
+{A, B, C} - Support: 33.3333%
+{B, E, F} - Support: 33.3333%
+
+--- Frequent 4-itemsets ---
+No frequent 4-itemsets found. Algorithm terminates.
+
+--- Maximal Frequent Itemsets ---
+{A, B, C} - Support: 33.3333%
+{B, E, F} - Support: 33.3333%
+
+--- Association Rules (One-Way) ---
+{A} -> {B} - Confidence: 75%
+{A} -> {B, C} - Confidence: 50%
+{B} -> {A, C} - Confidence: 40%
+{C} -> {A, B} - Confidence: 66.6667%
+{A} -> {C} - Confidence: 75%
+{B} -> {C} - Confidence: 40%
+{B} -> {E} - Confidence: 60%
+{B} -> {E, F} - Confidence: 40%
+{E} -> {B, F} - Confidence: 66.6667%
+{F} -> {B, E} - Confidence: 100%
+{B} -> {F} - Confidence: 40%
+{E} -> {F} - Confidence: 66.6667%

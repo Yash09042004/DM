@@ -1,0 +1,11 @@
+Choose linkage type:
+1. Single Linkage
+2. Complete Linkage
+3. Average Linkage
+Enter choice (1-3): Enter the desired number of clusters: 
+======== Final Assignments ========
+Point 0 -> Cluster 0
+Point 1 -> Cluster 0
+Point 2 -> Cluster 0
+Point 3 -> Cluster 1
+Point 4 -> Cluster 1

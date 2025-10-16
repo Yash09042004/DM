@@ -1,35 +1,21 @@
-#include <iostream>
-#include <vector>
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <map>
-#include <set>
-#include <limits>
-#include <iomanip>
+#include<bits/stdc++.h>
 
 using namespace std;
 
-// Struct to hold the measures (numerical data)
 struct Measures {
     int ise = 0, mse = 0, ese = 0, total = 0;
 };
 
-// --- Data Structure representing the 3D Cube ---
-// A nested map to represent Year -> Semester -> Subject -> Measures
 map<string, map<string, map<string, Measures>>> dataCube;
 
-// Global variables to hold the distinct dimension values
 set<string> years;
 set<string> semesters;
 set<string> subjects;
 
 
-// --- Helper function to print a "slice" of the cube ---
 void printCubeSlice(const map<string, map<string, Measures>>& slice, const string& sliceName) {
     cout << "\n--- Cube Slice for Year: " << sliceName << " ---\n";
 
-    // Print header
     cout << left << setw(12) << "Semester";
     for (const auto& subject : subjects) {
         cout << setw(10) << subject;
@@ -51,7 +37,6 @@ void printCubeSlice(const map<string, map<string, Measures>>& slice, const strin
 }
 
 
-// Function to load data from CSV and build the data cube
 bool buildDataCube(const string& filename) {
     ifstream file(filename);
     if (!file.is_open()) {
@@ -75,12 +60,10 @@ bool buildDataCube(const string& filename) {
         getline(ss, item, ','); ese = stoi(item);
         getline(ss, item, ','); total = stoi(item);
 
-        // Populate dimension sets
         years.insert(year);
         semesters.insert(semester);
         subjects.insert(subject);
 
-        // Insert data into the nested map structure
         dataCube[year][semester][subject] = {ise, mse, ese, total};
     }
 
@@ -88,9 +71,7 @@ bool buildDataCube(const string& filename) {
     return true;
 }
 
-// --- OLAP Operations with 3D-like Representation ---
 
-// OLAP Operation: Roll-Up (from Semesters and Subjects to Year)
 void rollUp() {
     cout << "\n--- Roll-Up: Total Marks by Year (Aggregating Semesters & Subjects) ---\n";
     map<string, int> yearTotals;
@@ -111,7 +92,6 @@ void rollUp() {
     }
 }
 
-// OLAP Operation: Drill-Down (from Year to Semesters and Subjects)
 void drillDown(const string& year) {
     cout << "\n--- Drill-Down: Viewing details for Year '" << year << "' ---\n";
     if (dataCube.count(year)) {
@@ -121,7 +101,6 @@ void drillDown(const string& year) {
     }
 }
 
-// OLAP Operation: Slice (by a specific subject)
 void slice(const string& subject) {
     cout << "\n--- Slice: Data for Subject '" << subject << "' ---\n";
     cout << left << setw(12) << "Year" << setw(12) << "Semester" << "Total Marks\n";
@@ -137,7 +116,6 @@ void slice(const string& subject) {
     }
 }
 
-// OLAP Operation: Dice (by year and semester)
 void dice(const string& year, const string& semester) {
     cout << "\n--- Dice: Records for Year '" << year << "' AND Semester '" << semester << "' ---\n";
     if (dataCube.count(year) && dataCube[year].count(semester)) {
@@ -151,11 +129,9 @@ void dice(const string& year, const string& semester) {
     }
 }
 
-// OLAP Operation: Cube (Full Aggregation across all dimensions)
 void cubeOperation() {
     cout << "\n--- Cube Operation (Aggregation across all dimensions) ---\n";
 
-    // (Year, Semester, Subject)
     cout << "\n[Year, Semester, Subject] Aggregation:\n";
     for (const auto& year : years) {
         for (const auto& sem : semesters) {
@@ -168,7 +144,6 @@ void cubeOperation() {
         }
     }
 
-    // (Year, Semester)
     cout << "\n[Year, Semester] Aggregation:\n";
     for (const auto& year : years) {
         for (const auto& sem : semesters) {
@@ -182,7 +157,7 @@ void cubeOperation() {
         }
     }
 
-    // (Year)
+
     cout << "\n[Year] Aggregation:\n";
     for (const auto& year : years) {
         int sum = 0;
@@ -196,7 +171,7 @@ void cubeOperation() {
         }
     }
 
-    // (Semester)
+  
     cout << "\n[Semester] Aggregation:\n";
     for (const auto& sem : semesters) {
         int sum = 0;
@@ -210,7 +185,7 @@ void cubeOperation() {
         cout << "Semester=" << sem << " -> Total=" << sum << "\n";
     }
 
-    // (Subject)
+
     cout << "\n[Subject] Aggregation:\n";
     for (const auto& sub : subjects) {
         int sum = 0;
@@ -224,7 +199,7 @@ void cubeOperation() {
         cout << "Subject=" << sub << " -> Total=" << sum << "\n";
     }
 
-    // Grand Total
+
     int grandTotal = 0;
     for (const auto& year : years) {
         for (const auto& sem : semesters) {
