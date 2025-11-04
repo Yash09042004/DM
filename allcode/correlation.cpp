@@ -11,6 +11,7 @@ int main(){
     string line;
     while(getline(infile,line)){
         if(line.size()==0) continue;
+        if(line.back()=='\r') line.pop_back();
         for(char &c: line) if(c==',') c=' ';
         stringstream ss(line);
         double x,y;

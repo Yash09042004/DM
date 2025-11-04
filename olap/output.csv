@@ -1,0 +1,66 @@
+[Year,Semester,Subject] Aggregation
+Year,Semester,Subject,Total
+First,I,Chem,84
+First,I,Maths,97
+First,I,Phys,90
+First,II,Chem,79
+First,II,Maths,94
+First,II,Phys,87
+Second,III,Chem,84
+Second,III,Maths,97
+Second,III,Phys,92
+Second,IV,Chem,88
+Second,IV,Maths,100
+Second,IV,Phys,95
+
+[Year,Semester] Aggregation
+Year,Semester,Total
+First,I,271
+First,II,260
+Second,III,273
+Second,IV,283
+
+[Year,Subject] Aggregation
+Year,Subject,Total
+First,Chem,163
+First,Maths,191
+First,Phys,177
+Second,Chem,172
+Second,Maths,197
+Second,Phys,187
+
+[Semester,Subject] Aggregation
+Semester,Subject,Total
+I,Chem,84
+I,Maths,97
+I,Phys,90
+II,Chem,79
+II,Maths,94
+II,Phys,87
+III,Chem,84
+III,Maths,97
+III,Phys,92
+IV,Chem,88
+IV,Maths,100
+IV,Phys,95
+
+[Year] Aggregation
+Year,Total
+First,531
+Second,556
+
+[Semester] Aggregation
+Semester,Total
+I,271
+II,260
+III,273
+IV,283
+
+[Subject] Aggregation
+Subject,Total
+Chem,335
+Maths,388
+Phys,364
+
+[Grand Total] Aggregation
+Total,1087

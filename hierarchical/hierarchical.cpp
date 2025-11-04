@@ -1,196 +1,66 @@
 #include <bits/stdc++.h>
 using namespace std;
-
 using Point = vector<double>;
 
-double euclidean_distance(const Point& p1, const Point& p2) {
-    double sum_sq = 0.0;
-    for (size_t i = 0; i < p1.size(); ++i) {
-        sum_sq += pow(p1[i] - p2[i], 2);
-    }
-    return sqrt(sum_sq);
+double dist(const Point &a, const Point &b){
+    double s=0; for(size_t i=0;i<a.size();++i){ double d=a[i]-b[i]; s+=d*d; } return sqrt(s);
 }
 
-vector<vector<double>> compute_distance_matrix(const vector<Point>& data) {
-    int n = data.size();
-    vector<vector<double>> dist(n, vector<double>(n, 0.0));
-    for (int i = 0; i < n; ++i) {
-        for (int j = i + 1; j < n; ++j) {
-            dist[i][j] = dist[j][i] = euclidean_distance(data[i], data[j]);
+int main(){
+    string fname; cout<<"CSV file: "; if(!(cin>>fname)) return 0;
+    ifstream in(fname); if(!in){ cerr<<"Cannot open\n"; return 1; }
+    vector<Point> X; string line, cell;
+    while(getline(in,line)){
+        if(line.empty()) continue;
+        stringstream ss(line); Point p;
+        while(getline(ss,cell,',')){ if(cell.size()) p.push_back(stod(cell)); }
+        if(!p.empty()) X.push_back(p);
+    }
+    in.close();
+    int n = X.size(); if(n==0){ cerr<<"No data\n"; return 1; }
+    int linkage; cout<<"Linkage (1=single,2=complete,3=average): "; cin>>linkage;
+    int k; cout<<"Clusters wanted: "; cin>>k; if(k<1||k>n){ cerr<<"Invalid k\n"; return 1; }
+
+    vector<vector<double>> pd(n, vector<double>(n));
+    for(int i=0;i<n;++i) for(int j=i+1;j<n;++j) pd[i][j]=pd[j][i]=dist(X[i],X[j]);
+
+    vector<set<int>> C(n); for(int i=0;i<n;++i) C[i].insert(i);
+    vector<int> alive(n,1); int alive_cnt=n;
+
+    auto cluster_dist = [&](int a,int b)->double{
+        double val = (linkage==2?0:1e18); int cnt=0; double sum=0;
+        for(int i: C[a]) for(int j: C[b]){
+            double d=pd[i][j]; if(linkage==1) val=min(val,d);
+            else if(linkage==2) val=max(val,d);
+            else { sum+=d; ++cnt; }
         }
-    }
-    return dist;
-}
-
-vector<int> hierarchical_clustering(const vector<Point>& data, int num_clusters, int linkage_type, ostream& out = cout) {
-    int n = data.size();
-    if (n < num_clusters) {
-        out << "Error: Number of clusters cannot exceed number of data points." << endl;
-        return {};
-    }
-
-    vector<vector<double>> dist_matrix = compute_distance_matrix(data);
-
-    vector<set<int>> clusters(n);
-    for (int i = 0; i < n; ++i) {
-        clusters[i].insert(i);
-    }
-    vector<int> vis(n, 1);
-
-    using T = tuple<double, int, int>;
-    priority_queue<T, vector<T>, greater<T>> pq;
-
-    auto add_distances = [&]() {
-        pq = priority_queue<T, vector<T>, greater<T>>();
-        for (int i = 0; i < n; ++i) {
-            if (!vis[i]) continue;
-            for (int j = i + 1; j < n; ++j) {
-                if (!vis[j]) continue;
-                double dist;
-                if (linkage_type == 1) { // Single linkage: min distance
-                    dist = numeric_limits<double>::max();
-                    for (int p : clusters[i]) {
-                        for (int q : clusters[j]) {
-                            dist = min(dist, dist_matrix[p][q]);
-                        }
-                    }
-                } else if (linkage_type == 2) { // Complete linkage: max distance
-                    dist = 0.0;
-                    for (int p : clusters[i]) {
-                        for (int q : clusters[j]) {
-                            dist = max(dist, dist_matrix[p][q]);
-                        }
-                    }
-                } else if (linkage_type == 3) { // Average linkage: average distance
-                    double sum = 0.0;
-                    int count = 0;
-                    for (int p : clusters[i]) {
-                        for (int q : clusters[j]) {
-                            sum += dist_matrix[p][q];
-                            count++;
-                        }
-                    }
-                    dist = sum / count;
-                }
-                pq.push({dist, i, j});
-            }
-        }
+        if(linkage==3) return sum / max(1,cnt);
+        return val;
     };
 
-    add_distances();
-
-    out << "Starting Hierarchical Clustering with " << num_clusters << " clusters and linkage type " << linkage_type << "...\n";
-
-    int active_count = n;
-    while (active_count > num_clusters) {
-        auto [dist, c1, c2] = pq.top();
-        pq.pop();
-
-        if (!vis[c1] || !vis[c2]) continue;
-
-        clusters[c1].insert(clusters[c2].begin(), clusters[c2].end());
-        clusters[c2].clear();
-        vis[c2] = 0;
-        active_count--;
-
-        out << "Merging clusters " << c1 << " and " << c2 << " with distance " << fixed << setprecision(4) << dist << endl;
-
-        add_distances();
-    }
-
-    vector<int> assignments(n);
-    int cluster_id = 0;
-    for (const auto& cluster : clusters) {
-        if (!cluster.empty()) {
-            for (int idx : cluster) {
-                assignments[idx] = cluster_id;
-            }
-            cluster_id++;
+    while(alive_cnt>k){
+        double best=1e308; int bi=-1,bj=-1;
+        for(int i=0;i<n;++i) if(alive[i]) for(int j=i+1;j<n;++j) if(alive[j]){
+            double d = cluster_dist(i,j);
+            if(d<best){ best=d; bi=i; bj=j; }
         }
+        if(bi==-1) break;
+        for(int x: C[bj]) C[bi].insert(x);
+        C[bj].clear(); alive[bj]=0; --alive_cnt;
     }
 
-    return assignments;
-}
-
-int main() {
-    string filen;
-    cout << "Enter the name of the file for input: ";
-    cin >> filen;
-
-    ifstream file(filen);
-    if (!file.is_open()) {
-        cerr << "Error: Could not open file " << filen << endl;
-        return 1;
+    vector<int> assign(n,-1); int cid=0;
+    for(int i=0;i<n;++i) if(!C[i].empty()){
+        for(int x: C[i]) assign[x]=cid;
+        ++cid;
     }
 
-    ofstream outfile("output.csv");
-    if (!outfile.is_open()) {
-        cerr << "Error: Could not open output.csv for writing." << endl;
-        return 1;
+    ofstream out("output.csv");
+    out<<"Point,Cluster\n";
+    for(int i=0;i<n;++i){
+        cout<<"Point "<<i<<" -> Cluster "<<assign[i]<<"\n";
+        out<<i<<","<<assign[i]<<"\n";
     }
-
-    vector<Point> data_points;
-    string line, cell;
-    
-    while (getline(file, line)) {
-        stringstream ss(line);
-        Point point;
-        while (getline(ss, cell, ',')) {
-            if (!cell.empty() && cell.back() == '\r') cell.pop_back();
-            try {
-                if (!cell.empty()) point.push_back(stod(cell));
-            } catch (...) {
-                cerr << "Error reading data: non-numeric cell found." << endl;
-                return 1;
-            }
-        }
-        if (!point.empty()) data_points.push_back(point);
-    }
-    file.close();
-
-    if (data_points.empty() || data_points[0].empty()) {
-        cerr << "Error: Input file is empty or invalid." << endl;
-        outfile << "Error: Input file is empty or invalid." << endl;
-        outfile.close();
-        return 1;
-    }
-
-    int linkage_type;
-    cout << "Choose linkage type:\n1. Single Linkage\n2. Complete Linkage\n3. Average Linkage\nEnter choice (1-3): ";
-    outfile << "Choose linkage type:\n1. Single Linkage\n2. Complete Linkage\n3. Average Linkage\nEnter choice (1-3): ";
-    cin >> linkage_type;
-    if (linkage_type < 1 || linkage_type > 3) {
-        cerr << "Invalid linkage type." << endl;
-        outfile << "Invalid linkage type." << endl;
-        outfile.close();
-        return 1;
-    }
-
-    int num_clusters;
-    cout << "Enter the desired number of clusters: ";
-    outfile << "Enter the desired number of clusters: ";
-    cin >> num_clusters;
-    if (num_clusters <= 0 || num_clusters > data_points.size()) {
-        cerr << "Error: Invalid number of clusters." << endl;
-        outfile << "Error: Invalid number of clusters." << endl;
-        outfile.close();
-        return 1;
-    }
-
-    vector<int> final = hierarchical_clustering(data_points, num_clusters, linkage_type);
-
-    if (!final.empty()) {
-        cout << "\n======== Final Assignments ========\n";
-        outfile << "\n======== Final Assignments ========\n";
-        for (size_t i = 0; i < data_points.size(); ++i) {
-            cout << "Point " << i << " -> Cluster " << final[i] << endl;
-            outfile << "Point " << i << " -> Cluster " << final[i] << endl;
-        }
-    } else {
-        cout << "Clustering failed." << endl;
-        outfile << "Clustering failed." << endl;
-    }
-
-    outfile.close();
+    out.close();
     return 0;
 }
